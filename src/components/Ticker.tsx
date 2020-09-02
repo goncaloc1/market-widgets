@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { AnyAction } from "redux";
 import { useSelector, useDispatch } from 'react-redux'
-import { TickerInit, TickerDispose } from '../redux/actions'
-import { getTickerSelector } from '../redux/reducer'
+import { TickerInit, TickerDispose } from '../redux/tickerActions'
+import { getTickerSelector, getLoadingSelector } from '../selectors'
 import { ThunkDispatch } from 'redux-thunk';
 
 function Ticker(props: { pair: string }) {
 
+  const loading = useSelector(getLoadingSelector);
   const state = useSelector(getTickerSelector);
 
   const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
@@ -17,12 +18,12 @@ function Ticker(props: { pair: string }) {
     return () => {
       dispatch(TickerDispose());
     }
-  }, [dispatch]);
+  }, [dispatch, props.pair]);
 
   return (
     <>
-      {/* TODO take toLocaString logic and similar our of here */}
-      {!state.loading && state.data.length > 0 &&
+      {/* TODO take toLocaString logic and similar out of here */}
+      {!loading && state.data.length > 0 &&
         <div className="row w-25">
           <div className="col-2">
             {/* TODO change image according to pair */}
@@ -35,7 +36,9 @@ function Ticker(props: { pair: string }) {
           </div>
           <div className="col-5">
             <div className="">{state.data[6].toLocaleString()}</div>
-            <div className={"small " + (state.data[5] >= 0 ? "text-success" : "text-danger")}>{state.data[4]} {(state.data[5] * 100).toFixed(2)}%</div>
+            <div className={"small " + (state.data[5] >= 0 ? "text-success" : "text-danger")}>
+              {state.data[4].toLocaleString(undefined, { maximumFractionDigits: 2 })} {(state.data[5] * 100).toFixed(2)}%
+            </div>
             <div className="small">HIGH {state.data[8].toLocaleString()}</div>
           </div>
         </div>

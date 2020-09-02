@@ -1,8 +1,5 @@
-import { TickerActionType } from './actions'
-import { IRootState } from "../reducer";
+import { TickerActionType } from './tickerActions'
 import { AnyAction } from 'redux';
-
-export const getTickerSelector = (state: IRootState): ITickerState => state.ticker;
 
 
 export interface ITickerState {

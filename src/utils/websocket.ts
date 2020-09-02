@@ -6,7 +6,7 @@ export const createWebSocket = (payload: any, dataUpdateCallback: (data: any) =>
   /**
    * Always try to WS resubscribe unless component is unmounting.
    */
-  let resubscribeWS = true;
+  let resubscribeWS: boolean;
   let ws: WebSocket;
 
   const wsClose = () => ws && ws.close();
@@ -18,6 +18,8 @@ export const createWebSocket = (payload: any, dataUpdateCallback: (data: any) =>
   }
 
   const subscribeWS = () => {
+    resubscribeWS = true;
+
     // TODO receive url as parameter
     ws = new WebSocket("wss://api-pub.bitfinex.com/ws/2");
 
