@@ -127,13 +127,14 @@ const initializePriceLevels = (nPricePoints: number, data: any[]) => {
   const asksData: IPriceLevel[] = new Array(nPricePoints);
 
   data.forEach((o: number[], i: number) => {
+    const amount = Math.abs(o[2]);
     // TODO optimize
     if (i < nPricePoints) {
       bidsData[i] = doPriceLevelFormat({
         price: o[0],
         count: o[1],
-        amount: o[2],
-        total: i === 0 ? o[2] : bidsData[i - 1].total + o[2]
+        amount,
+        total: i === 0 ? amount : bidsData[i - 1].total + amount
       });
     }
     else {
@@ -141,8 +142,8 @@ const initializePriceLevels = (nPricePoints: number, data: any[]) => {
       asksData[asksIdx] = doPriceLevelFormat({
         price: o[0],
         count: o[1],
-        amount: o[2],
-        total: asksIdx === 0 ? o[2] : asksData[asksIdx - 1].total + o[2]
+        amount,
+        total: asksIdx === 0 ? amount : asksData[asksIdx - 1].total + amount
       });
     }
   });
@@ -156,8 +157,9 @@ const initializePriceLevels = (nPricePoints: number, data: any[]) => {
  */
 const addOrUpdatePriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
   const found = data.find(pl => pl.price === o[0]);
+  const amount = Math.abs(o[2]);
   if (found) {
-    return updatePriceLevel(found, o[2], data);
+    return updatePriceLevel(found, amount, data);
   }
   else {
     return addPriceLevel(o, data, isBids);
@@ -182,7 +184,7 @@ const addPriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
   const priceLevel = doPriceLevelFormat({
     price: o[0],
     count: o[1],
-    amount: o[2],
+    amount: Math.abs(o[2]),
     total: 0      // doesn't matter at this point, will be calculated after
   });
 

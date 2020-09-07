@@ -7,6 +7,24 @@
   margin-top: 50px;
 }
 
+.bids-orderbook-bars-container,
+.asks-orderbook-bars-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bids-orderbook-bars-container {
+  transform: scale(-1, 1);
+  fill: #16b157;
+}
+
+.asks-orderbook-bars-container {
+  fill: #f05359;
+}
+
 .loading-spinner {
   margin-top: 50px;
 }

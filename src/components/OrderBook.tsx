@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { AnyAction } from "redux";
 import { useSelector, useDispatch } from 'react-redux'
 import { OrderBookControls } from './OrderBookControls'
+import { OrderBookBars } from './OrderBookBars'
 import { OrderBookInit, OrderBookDispose } from '../redux/orderBookActions'
 import { IPriceLevel } from '../redux/orderBookReducer'
 import { getOrderBookSelector, getLoadingSelector } from '../selectors'
@@ -51,6 +52,8 @@ function OrderBook(props: { pair: string }) {
                   <div className="col-sm text-right">PRICE</div>
                 </div>
 
+                <OrderBookBars isBids={true} />
+
                 {state.bidsData.map((priceLevel: IPriceLevel) => (
                   <div className="row border-bottom" key={priceLevel.price}>
                     <div className="col-sm">{priceLevel.count}</div>
@@ -70,6 +73,8 @@ function OrderBook(props: { pair: string }) {
                   <div className="col-sm text-right">AMOUNT</div>
                   <div className="col-sm text-right">COUNT</div>
                 </div>
+
+                <OrderBookBars isBids={false} />
 
                 {state.asksData.map((priceLevel: IPriceLevel) => (
                   <div className="row border-bottom" key={priceLevel.price}>
