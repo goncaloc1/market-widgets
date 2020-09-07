@@ -1,43 +1,60 @@
-import { Dispatch } from "redux";
+import { Dispatch, AnyAction } from "redux";
+import { ThunkDispatch } from 'redux-thunk';
+import { IRootState } from '../reducer'
+import { getOrderBookSelector } from '../selectors'
 import { createWebSocket } from "../utils/websocket"
 
 
 export enum OrderBookActionType {
-  OrderBookInitStart = "OrderBookInitStart",
-  OrderBookInitSuccess = "OrderBookInitSuccess",
-  OrderBookInitError = "OrderBookInitError",
+  OrderBookFetchStart = "OrderBookFetchStart",
+  OrderBookFetchSuccess = "OrderBookFetchSuccess",
+  OrderBookFetchError = "OrderBookFetchError",
   OrderBookDataUpdate = "OrderBookDataUpdate",
+  OrderBookDecreasePrecision = "OrderBookDecreasePrecision",
   OrderBookDispose = "OrderBookDispose"
 }
 
 /**
  * TODO would probably prefer having
- * a websocker ref in React component instead.
+ * a websocket ref in React component instead.
  */
 let closeWebSocket: () => void;
 
+export const getWebSocketDefaultPayload = (pair: string) => ({
+  "event": "subscribe",
+  "channel": "book",
+  "symbol": pair,
+  "prec": "P0",
+  //"freq": "F1",
+  "len": 25
+});
+
+export type WebSocketPayload = ReturnType<typeof getWebSocketDefaultPayload>
+
 
 export const OrderBookInit = (pair: string) => {
-  return async (dispatch: Dispatch) => {
-    const nPricePoints = 25;
+  return async (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+    const payload = getWebSocketDefaultPayload(pair);
 
-    dispatch(OrderBookInitStart(nPricePoints));
+    dispatch(OrderBookFetch(payload));
+  };
+};
+
+const OrderBookFetch = (payload: WebSocketPayload) => {
+  return async (dispatch: Dispatch) => {
+
+    if (closeWebSocket) {
+      closeWebSocket();
+    }
+
+    dispatch(OrderBookFetchStart(payload));
 
     try {
-      const payload = {
-        "event": "subscribe",
-        "channel": "book",
-        "symbol": pair,
-        "prec": "P0",
-        //"freq": "F1",
-        "len": nPricePoints
-      };
-
       const dispatchCallback = (data: any[]) => dispatch(OrderBookDataUpdate(data));
 
       closeWebSocket = createWebSocket(payload, dispatchCallback);
 
-      dispatch(OrderBookInitSuccess());
+      dispatch(OrderBookFetchSuccess());
     }
     catch (ex) {
       console.error(ex);
@@ -45,17 +62,39 @@ export const OrderBookInit = (pair: string) => {
   };
 };
 
-const OrderBookInitStart = (nPricePoints: number) => {
+const OrderBookFetchStart = (payload: WebSocketPayload) => {
   return {
-    type: OrderBookActionType.OrderBookInitStart,
-    data: nPricePoints
+    type: OrderBookActionType.OrderBookFetchStart,
+    data: payload
   } as const;
 };
 
-const OrderBookInitSuccess = () => {
+const OrderBookFetchSuccess = () => {
   return {
-    type: OrderBookActionType.OrderBookInitSuccess
+    type: OrderBookActionType.OrderBookFetchSuccess
   } as const;
+};
+
+export const OrderBookDecreasePrecision = () => {
+  return async (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => IRootState) => {
+
+    const currentPayload = getOrderBookSelector(getState()).payload!;
+    const prec = getDecreasedPrecision(currentPayload.prec);
+    const payload = { ...currentPayload, prec };
+
+    dispatch(OrderBookFetch(payload));
+  };
+};
+
+export const OrderBookIncreasePrecision = () => {
+  return async (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => IRootState) => {
+
+    const currentPayload = getOrderBookSelector(getState()).payload!;
+    const prec = getIncreasedPrecision(currentPayload.prec);
+    const payload = { ...currentPayload, prec };
+
+    dispatch(OrderBookFetch(payload));
+  };
 };
 
 const OrderBookDataUpdate = (data: {}) => {
@@ -73,3 +112,25 @@ export const OrderBookDispose = () => {
     type: OrderBookActionType.OrderBookDispose
   } as const;
 };
+
+const getDecreasedPrecision = (currentPrecision: string): string => {
+  const results = new Map();
+  results.set("P0", "P0");
+  results.set("P1", "P0");
+  results.set("P2", "P1");
+  results.set("P3", "P2");
+  results.set("P4", "P3");
+
+  return results.get(currentPrecision) || "P0";
+}
+
+const getIncreasedPrecision = (currentPrecision: string): string => {
+  const results = new Map();
+  results.set("P0", "P1");
+  results.set("P1", "P2");
+  results.set("P2", "P3");
+  results.set("P3", "P4");
+  results.set("P4", "P4");
+
+  return results.get(currentPrecision) || "P0";
+}

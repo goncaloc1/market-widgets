@@ -1,11 +1,11 @@
-import { OrderBookActionType } from './orderBookActions'
+import { OrderBookActionType, WebSocketPayload } from './orderBookActions'
 import { AnyAction } from 'redux';
 import { orderBy } from 'lodash';
 
 
 export interface IOrderBookState {
   loading: boolean,
-  nPricePoints: number,
+  payload?: WebSocketPayload,
   connected: boolean,
   bidsData: IPriceLevel[],
   asksData: IPriceLevel[]
@@ -13,7 +13,7 @@ export interface IOrderBookState {
 
 export const getOrderBookInitialState = (): IOrderBookState => ({
   loading: true,
-  nPricePoints: 0,
+  payload: undefined,
   connected: false,
   bidsData: [],
   asksData: []
@@ -32,11 +32,11 @@ export interface IPriceLevel {
 
 export const orderBookReducer = (state = getOrderBookInitialState(), action: AnyAction): IOrderBookState => {
   switch (action.type) {
-    case OrderBookActionType.OrderBookInitStart: {
+    case OrderBookActionType.OrderBookFetchStart: {
       const initial = getOrderBookInitialState();
-      return { ...initial, nPricePoints: action.data }
+      return { ...initial, payload: action.data }
     }
-    case OrderBookActionType.OrderBookInitSuccess: {
+    case OrderBookActionType.OrderBookFetchSuccess: {
       return { ...state };
     }
     /**
@@ -85,9 +85,9 @@ export const orderBookReducer = (state = getOrderBookInitialState(), action: Any
 
           return { ...state };
         }
-        else if (data[1].length === state.nPricePoints * 2) {
+        else if (data[1].length === state.payload!.len * 2) {
           // Snapshot
-          const [bidsData, asksData] = initializePriceLevels(state.nPricePoints, data[1]);
+          const [bidsData, asksData] = initializePriceLevels(state.payload!.len, data[1]);
           return { ...state, loading: false, bidsData, asksData };
         }
       }
