@@ -1,3 +1,12 @@
+.trades-container {
+  height: 620px;
+  margin-top: 30px;
+}
+
+.orderbook-container {
+  margin-top: 50px;
+}
+
 .loading-spinner {
   margin-top: 50px;
 }

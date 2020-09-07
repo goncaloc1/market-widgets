@@ -34,7 +34,7 @@ function OrderBook(props: { pair: string }) {
   return (
     <>
       {!loading && state.bidsData.length > 0 &&
-        <div className="row w-50">
+        <div className="orderbook-container row w-50">
           <div className="col-6">
 
             <div className="small">

@@ -35,7 +35,7 @@ function Trades(props: { pair: string }) {
     <>
       {/* TODO take toLocaleString logic and similar out of here */}
       {!loading && state.data.length > 0 &&
-        <div className="w-25">
+        <div className="trades-container w-25">
           <div className="small">
             <div className="row border-bottom">
               <div className="col-sm-1"></div>

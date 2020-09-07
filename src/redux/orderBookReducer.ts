@@ -73,12 +73,12 @@ export const orderBookReducer = (state = getOrderBookInitialState(), action: Any
             // add or update price level
             if (o[2] > 0) {
               // add/update bids
-              const bidsData = addOrUpdatePriceLevel(o, state.bidsData);
+              const bidsData = addOrUpdatePriceLevel(o, state.bidsData, true);
               return { ...state, bidsData };
             }
             else if (o[2] < 0) {
               // add/update asks
-              const asksData = addOrUpdatePriceLevel(o, state.asksData);
+              const asksData = addOrUpdatePriceLevel(o, state.asksData, false);
               return { ...state, asksData };
             }
           }
@@ -154,13 +154,13 @@ const initializePriceLevels = (nPricePoints: number, data: any[]) => {
  * Adds or updates a price level
  * in an existing list of price levels.
  */
-const addOrUpdatePriceLevel = (o: number[], data: IPriceLevel[]) => {
+const addOrUpdatePriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
   const found = data.find(pl => pl.price === o[0]);
   if (found) {
     return updatePriceLevel(found, o[2], data);
   }
   else {
-    return addPriceLevel(o, data);
+    return addPriceLevel(o, data, isBids);
   }
 }
 
@@ -178,7 +178,7 @@ const updatePriceLevel = (priceLevel: IPriceLevel, amount: number, data: IPriceL
  * Adds a new price level to array of price levels
  * and orders it (also updates amounts and totals).
  */
-const addPriceLevel = (o: number[], data: IPriceLevel[]) => {
+const addPriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
   const priceLevel = doPriceLevelFormat({
     price: o[0],
     count: o[1],
@@ -188,7 +188,7 @@ const addPriceLevel = (o: number[], data: IPriceLevel[]) => {
 
   let newData = [...data];
   newData.push(priceLevel);
-  const orderedData = orderBy(newData, 'price', 'desc');
+  const orderedData = orderBy(newData, 'price', isBids ? 'desc' : 'asc');
   return updateTotals(orderedData);
 }
 

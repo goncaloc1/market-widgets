@@ -24,7 +24,7 @@ function Ticker(props: { pair: string }) {
     <>
       {/* TODO take toLocaString logic and similar out of here */}
       {!loading && state.data.length > 0 &&
-        <div className="row w-25">
+        <div className="ticker-container row w-25">
           <div className="col-2">
             {/* TODO change image according to pair */}
             <img src="https://www.bitfinex.com/assets/BTC-alt-631a4985ef5564fba7508526f8952ba54cd598318506bee963cc9b6d00600278.svg" alt="crypto-icon" className="img-thumbnail border-0" />

@@ -17,9 +17,7 @@ function App() {
   return (
     <>
       <Ticker pair={pair} />
-      <div className="mt-4"></div>
       <Trades pair={pair} />
-      <div className="mt-4"></div>
       <OrderBook pair={pair} />
       <Loading loading={loading} />
     </>
