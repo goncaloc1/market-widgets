@@ -22,7 +22,7 @@ function Ticker(props: { pair: string }) {
 
   return (
     <>
-      {/* TODO take toLocaString logic and similar out of here */}
+      {/* TODO take toLocaleString logic and similar out of here */}
       {!loading && state.data.length > 0 &&
         <div className="ticker-container row w-25">
           <div className="col-2">

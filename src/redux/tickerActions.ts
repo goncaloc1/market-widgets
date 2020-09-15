@@ -12,7 +12,7 @@ export enum TickerActionType {
 
 /**
  * TODO would probably prefer having
- * a websocker ref in React component instead.
+ * a websocket ref in React component instead.
  */
 let closeWebSocket: () => void;
 
@@ -52,7 +52,7 @@ const TickerInitSuccess = () => {
   } as const;
 };
 
-const TickerDataUpdate = (data: {}) => {
+export const TickerDataUpdate = (data: {}) => {
   return {
     type: TickerActionType.TickerDataUpdate,
     data
