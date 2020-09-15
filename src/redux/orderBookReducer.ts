@@ -112,7 +112,7 @@ const formatTotal = (total: number) => total.toFixed(2);
  * price, amount and total fields
  * and return a new instance.
  */
-const doPriceLevelFormat = (pl: any): IPriceLevel => {
+export const doPriceLevelFormat = (pl: any): IPriceLevel => {
   return {
     ...pl,
     priceFormatted: pl.price.toLocaleString(undefined, { maximumFractionDigits: 3 }),
@@ -122,7 +122,7 @@ const doPriceLevelFormat = (pl: any): IPriceLevel => {
 }
 
 
-const initializePriceLevels = (nPricePoints: number, data: any[]) => {
+export const initializePriceLevels = (nPricePoints: number, data: any[]) => {
   const bidsData: IPriceLevel[] = new Array(nPricePoints);
   const asksData: IPriceLevel[] = new Array(nPricePoints);
 
@@ -148,22 +148,7 @@ const initializePriceLevels = (nPricePoints: number, data: any[]) => {
     }
   });
 
-  return [bidsData, asksData];
-}
-
-/**
- * Adds or updates a price level
- * in an existing list of price levels.
- */
-const addOrUpdatePriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
-  const found = data.find(pl => pl.price === o[0]);
-  const amount = Math.abs(o[2]);
-  if (found) {
-    return updatePriceLevel(found, amount, data);
-  }
-  else {
-    return addPriceLevel(o, data, isBids);
-  }
+  return [bidsData, asksData] as const;
 }
 
 /**
@@ -192,6 +177,21 @@ const addPriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
   newData.push(priceLevel);
   const orderedData = orderBy(newData, 'price', isBids ? 'desc' : 'asc');
   return updateTotals(orderedData);
+}
+
+/**
+ * Adds or updates a price level
+ * in an existing list of price levels.
+ */
+const addOrUpdatePriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
+  const found = data.find(pl => pl.price === o[0]);
+  const amount = Math.abs(o[2]);
+  if (found) {
+    return updatePriceLevel(found, amount, data);
+  }
+  else {
+    return addPriceLevel(o, data, isBids);
+  }
 }
 
 /**

@@ -97,7 +97,7 @@ export const OrderBookIncreasePrecision = () => {
   };
 };
 
-const OrderBookDataUpdate = (data: {}) => {
+export const OrderBookDataUpdate = (data: {}) => {
   return {
     type: OrderBookActionType.OrderBookDataUpdate,
     data
