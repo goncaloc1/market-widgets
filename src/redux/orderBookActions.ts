@@ -1,9 +1,8 @@
 import { Dispatch, AnyAction } from "redux";
-import { ThunkDispatch } from 'redux-thunk';
-import { IRootState } from '../reducer'
-import { getOrderBookSelector } from '../selectors'
-import { createWebSocket } from "../utils/websocket"
-
+import { ThunkDispatch } from "redux-thunk";
+import { IRootState } from "../reducer";
+import { getOrderBookSelector } from "../selectors";
+import { createWebSocket } from "../utils/websocket";
 
 export enum OrderBookActionType {
   OrderBookFetchStart = "OrderBookFetchStart",
@@ -11,26 +10,22 @@ export enum OrderBookActionType {
   OrderBookFetchError = "OrderBookFetchError",
   OrderBookDataUpdate = "OrderBookDataUpdate",
   OrderBookDecreasePrecision = "OrderBookDecreasePrecision",
-  OrderBookDispose = "OrderBookDispose"
+  OrderBookDispose = "OrderBookDispose",
+  OrderBookSimulateConnectionIssue = "OrderBookSimulateConnectionIssue",
 }
 
-/**
- * TODO would probably prefer having
- * a websocket ref in React component instead.
- */
-let closeWebSocket: () => void;
+let closeWebSocket: (reconnect?: boolean) => void;
 
 export const getWebSocketDefaultPayload = (pair: string) => ({
-  "event": "subscribe",
-  "channel": "book",
-  "symbol": pair,
-  "prec": "P0",
+  event: "subscribe",
+  channel: "book",
+  symbol: pair,
+  prec: "P0",
   //"freq": "F1",
-  "len": 25
+  len: 25,
 });
 
-export type WebSocketPayload = ReturnType<typeof getWebSocketDefaultPayload>
-
+export type WebSocketPayload = ReturnType<typeof getWebSocketDefaultPayload>;
 
 export const OrderBookInit = (pair: string) => {
   return async (dispatch: ThunkDispatch<any, any, AnyAction>) => {
@@ -42,7 +37,6 @@ export const OrderBookInit = (pair: string) => {
 
 const OrderBookFetch = (payload: WebSocketPayload) => {
   return async (dispatch: Dispatch) => {
-
     if (closeWebSocket) {
       closeWebSocket();
     }
@@ -50,13 +44,13 @@ const OrderBookFetch = (payload: WebSocketPayload) => {
     dispatch(OrderBookFetchStart(payload));
 
     try {
-      const dispatchCallback = (data: any[]) => dispatch(OrderBookDataUpdate(data));
+      const dispatchCallback = (data: any[]) =>
+        dispatch(OrderBookDataUpdate(data));
 
       closeWebSocket = createWebSocket(payload, dispatchCallback);
 
       dispatch(OrderBookFetchSuccess());
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error(ex);
     }
   };
@@ -65,19 +59,21 @@ const OrderBookFetch = (payload: WebSocketPayload) => {
 const OrderBookFetchStart = (payload: WebSocketPayload) => {
   return {
     type: OrderBookActionType.OrderBookFetchStart,
-    data: payload
+    data: payload,
   } as const;
 };
 
 const OrderBookFetchSuccess = () => {
   return {
-    type: OrderBookActionType.OrderBookFetchSuccess
+    type: OrderBookActionType.OrderBookFetchSuccess,
   } as const;
 };
 
 export const OrderBookDecreasePrecision = () => {
-  return async (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => IRootState) => {
-
+  return async (
+    dispatch: ThunkDispatch<any, any, AnyAction>,
+    getState: () => IRootState
+  ) => {
     const currentPayload = getOrderBookSelector(getState()).payload!;
     const prec = getDecreasedPrecision(currentPayload.prec);
     const payload = { ...currentPayload, prec };
@@ -87,8 +83,10 @@ export const OrderBookDecreasePrecision = () => {
 };
 
 export const OrderBookIncreasePrecision = () => {
-  return async (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => IRootState) => {
-
+  return async (
+    dispatch: ThunkDispatch<any, any, AnyAction>,
+    getState: () => IRootState
+  ) => {
     const currentPayload = getOrderBookSelector(getState()).payload!;
     const prec = getIncreasedPrecision(currentPayload.prec);
     const payload = { ...currentPayload, prec };
@@ -100,16 +98,24 @@ export const OrderBookIncreasePrecision = () => {
 export const OrderBookDataUpdate = (data: {}) => {
   return {
     type: OrderBookActionType.OrderBookDataUpdate,
-    data
+    data,
   } as const;
 };
-
 
 export const OrderBookDispose = () => {
   closeWebSocket();
 
   return {
-    type: OrderBookActionType.OrderBookDispose
+    type: OrderBookActionType.OrderBookDispose,
+  } as const;
+};
+
+export const OrderBookSimulateConnectionIssue = () => {
+  const reconnect = true;
+  closeWebSocket(reconnect);
+
+  return {
+    type: OrderBookActionType.OrderBookSimulateConnectionIssue,
   } as const;
 };
 
@@ -122,7 +128,7 @@ const getDecreasedPrecision = (currentPrecision: string): string => {
   results.set("P4", "P3");
 
   return results.get(currentPrecision) || "P0";
-}
+};
 
 const getIncreasedPrecision = (currentPrecision: string): string => {
   const results = new Map();
@@ -133,4 +139,4 @@ const getIncreasedPrecision = (currentPrecision: string): string => {
   results.set("P4", "P4");
 
   return results.get(currentPrecision) || "P0";
-}
+};

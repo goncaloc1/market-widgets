@@ -1,49 +1,59 @@
 /**
  * Creates websocket and subscribes using payload.
- * Tries to reconnect unless close is called explicitly.
+ * TODO reconnection
  */
-export const createWebSocket = (payload: any, dataUpdateCallback: (data: any) => void) => {
+export const createWebSocket = (
+  payload: any,
+  dataUpdateCallback: (data: any) => void
+) => {
   /**
    * Always try to WS resubscribe unless component is unmounting.
    */
-  let resubscribeWS: boolean;
+  let reconnection = true;
   let ws: WebSocket;
 
   const wsClose = () => ws && ws.close();
 
-  const forceClose = () => {
-    // normal component unmount, do not try to WS reconnect.
-    resubscribeWS = false;
+  /**
+   * `reconnect` set to true could be useful to simulate connection issues
+   */
+  const close = (reconnect = false) => {
+    if (!reconnect) {
+      reconnection = false;
+    }
+
     wsClose();
-  }
+  };
 
   const subscribeWS = () => {
-    resubscribeWS = true;
-
     // TODO receive url as parameter
     ws = new WebSocket("wss://api-pub.bitfinex.com/ws/2");
 
     ws.onopen = () => {
       ws.send(JSON.stringify(payload));
-    }
+    };
 
     ws.onmessage = (event: any) => {
       const data = JSON.parse(event.data);
       dataUpdateCallback(data);
-    }
+    };
 
     ws.onerror = (err: any) => {
       console.log("ws error:", err.message);
       wsClose();
-    }
+    };
 
     ws.onclose = (e: any) => {
       console.log("ws close:", e.code, e.reason);
-      resubscribeWS && subscribeWS();
+
+      //TODO timeout / delay
+      if (reconnection) {
+        subscribeWS();
+      }
     };
-  }
+  };
 
   subscribeWS();
 
-  return forceClose;
+  return close;
 };

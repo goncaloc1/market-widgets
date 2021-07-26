@@ -1,13 +1,12 @@
 import { Dispatch } from "redux";
-import { createWebSocket } from "../utils/websocket"
-
+import { createWebSocket } from "../utils/websocket";
 
 export enum TickerActionType {
   TickerInitStart = "TickerInitStart",
   TickerInitSuccess = "TickerInitSuccess",
   TickerInitError = "TickerInitError",
   TickerDataUpdate = "TickerDataUpdate",
-  TickerDispose = "TickerDispose"
+  TickerDispose = "TickerDispose",
 }
 
 /**
@@ -16,25 +15,24 @@ export enum TickerActionType {
  */
 let closeWebSocket: () => void;
 
-
 export const TickerInit = (pair: string) => {
   return async (dispatch: Dispatch) => {
     dispatch(TickerInitStart());
 
     try {
       const payload = {
-        "event": "subscribe",
-        "channel": "ticker",
-        "symbol": pair
+        event: "subscribe",
+        channel: "ticker",
+        symbol: pair,
       };
 
-      const dispatchCallback = (data: any[]) => dispatch(TickerDataUpdate(data));
+      const dispatchCallback = (data: any[]) =>
+        dispatch(TickerDataUpdate(data));
 
       closeWebSocket = createWebSocket(payload, dispatchCallback);
 
       dispatch(TickerInitSuccess());
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error(ex);
     }
   };
@@ -42,28 +40,27 @@ export const TickerInit = (pair: string) => {
 
 const TickerInitStart = () => {
   return {
-    type: TickerActionType.TickerInitStart
+    type: TickerActionType.TickerInitStart,
   } as const;
 };
 
 const TickerInitSuccess = () => {
   return {
-    type: TickerActionType.TickerInitSuccess
+    type: TickerActionType.TickerInitSuccess,
   } as const;
 };
 
 export const TickerDataUpdate = (data: {}) => {
   return {
     type: TickerActionType.TickerDataUpdate,
-    data
+    data,
   } as const;
 };
-
 
 export const TickerDispose = () => {
   closeWebSocket();
 
   return {
-    type: TickerActionType.TickerDispose
+    type: TickerActionType.TickerDispose,
   } as const;
 };
