@@ -4,31 +4,33 @@ import { useSelector, useDispatch } from "react-redux";
 import { OrderBookControls } from "./OrderBookControls";
 import { OrderBookBars } from "./OrderBookBars";
 import {
-  OrderBookInit,
-  OrderBookDispose,
-  OrderBookSimulateConnectionIssue,
+  orderBookInit,
+  orderBookDispose,
+  orderBookSimulateConnectionIssue,
 } from "../redux/orderBookActions";
-import { IPriceLevel } from "../redux/orderBookReducer";
+
 import { getOrderBookSelector, getLoadingSelector } from "../selectors";
 import { ThunkDispatch } from "redux-thunk";
+import { IPriceLevel } from "../redux/orderBookHelpers";
+import { RootState } from "../redux/store";
 
 function OrderBook(props: { pair: string }) {
   const loading = useSelector(getLoadingSelector);
   const state = useSelector(getOrderBookSelector);
 
-  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   useEffect(() => {
-    dispatch(OrderBookInit(props.pair));
+    dispatch(orderBookInit(props.pair));
 
     return () => {
-      dispatch(OrderBookDispose());
+      dispatch(orderBookDispose());
     };
   }, [dispatch, props.pair]);
 
   const simulateConnectionIssue = () => {
     if (state.connected) {
-      dispatch(OrderBookSimulateConnectionIssue());
+      dispatch(orderBookSimulateConnectionIssue());
     }
   };
 

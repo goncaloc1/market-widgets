@@ -1,23 +1,15 @@
-import { Dispatch, AnyAction } from "redux";
-import { ThunkDispatch } from "redux-thunk";
-import { IRootState } from "../reducer";
 import { getOrderBookSelector } from "../selectors";
 import { createWebSocket } from "../utils/websocket";
-
-export enum OrderBookActionType {
-  OrderBookFetchStart = "OrderBookFetchStart",
-  OrderBookFetchSuccess = "OrderBookFetchSuccess",
-  OrderBookFetchError = "OrderBookFetchError",
-  OrderBookDataUpdate = "OrderBookDataUpdate",
-  OrderBookDecreasePrecision = "OrderBookDecreasePrecision",
-  OrderBookDispose = "OrderBookDispose",
-  OrderBookSimulateConnectionIssue = "OrderBookSimulateConnectionIssue",
-  OrderBookConnectedChange = "OrderBookConnectedChange",
-}
+import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  getDecreasedPrecision,
+  getIncreasedPrecision,
+} from "./orderBookHelpers";
+import { RootState } from "./store";
 
 let closeWebSocket: (reconnect?: boolean) => void;
 
-export const getWebSocketDefaultPayload = (pair: string) => ({
+const getWebSocketDefaultPayload = (pair: string) => ({
   event: "subscribe",
   channel: "book",
   symbol: pair,
@@ -28,28 +20,28 @@ export const getWebSocketDefaultPayload = (pair: string) => ({
 
 export type WebSocketPayload = ReturnType<typeof getWebSocketDefaultPayload>;
 
-export const OrderBookInit = (pair: string) => {
-  return async (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+export const orderBookInit = createAsyncThunk(
+  "orderBook/init",
+  (pair: string, thunkAPI) => {
     const payload = getWebSocketDefaultPayload(pair);
 
-    dispatch(OrderBookFetch(payload));
-  };
-};
+    thunkAPI.dispatch(orderBookFetch(payload));
+  }
+);
 
-const OrderBookFetch = (subscribePayload: WebSocketPayload) => {
-  return async (dispatch: Dispatch) => {
+export const orderBookFetch = createAsyncThunk(
+  "orderBook/fetch",
+  (subscribePayload: WebSocketPayload, thunkAPI) => {
     if (closeWebSocket) {
       closeWebSocket();
     }
 
-    dispatch(OrderBookFetchStart(subscribePayload));
-
     try {
       const handleDataUpdate = (data: any[]) =>
-        dispatch(OrderBookDataUpdate(data));
+        thunkAPI.dispatch(orderBookDataUpdate(data));
 
       const handleConnectedChange = (connected: boolean) =>
-        dispatch(OrderBookConnectedChange(connected));
+        thunkAPI.dispatch(orderBookConnectedChange(connected));
 
       closeWebSocket = createWebSocket(
         "wss://api-pub.bitfinex.com/ws/2",
@@ -57,102 +49,60 @@ const OrderBookFetch = (subscribePayload: WebSocketPayload) => {
         handleDataUpdate,
         handleConnectedChange
       );
-
-      dispatch(OrderBookFetchSuccess());
     } catch (ex) {
-      console.error(ex);
+      thunkAPI.rejectWithValue(ex);
     }
-  };
-};
+  }
+);
 
-const OrderBookFetchStart = (payload: WebSocketPayload) => {
-  return {
-    type: OrderBookActionType.OrderBookFetchStart,
-    data: payload,
-  } as const;
-};
+export const orderBookDecreasePrecision = createAsyncThunk<
+  void,
+  void,
+  { state: RootState }
+>("orderBook/decreasePrecision", (_, thunkAPI) => {
+  const currentPayload = getOrderBookSelector(thunkAPI.getState()).payload!;
+  const prec = getDecreasedPrecision(currentPayload.prec);
+  const payload = { ...currentPayload, prec };
 
-const OrderBookFetchSuccess = () => {
-  return {
-    type: OrderBookActionType.OrderBookFetchSuccess,
-  } as const;
-};
+  thunkAPI.dispatch(orderBookFetch(payload));
+});
 
-export const OrderBookDecreasePrecision = () => {
-  return async (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => IRootState
-  ) => {
-    const currentPayload = getOrderBookSelector(getState()).payload!;
-    const prec = getDecreasedPrecision(currentPayload.prec);
-    const payload = { ...currentPayload, prec };
+export const orderBookIncreasePrecision = createAsyncThunk<
+  void,
+  void,
+  { state: RootState }
+>("orderBook/increasePrecision", (_, thunkAPI) => {
+  const currentPayload = getOrderBookSelector(thunkAPI.getState()).payload!;
+  const prec = getIncreasedPrecision(currentPayload.prec);
+  const payload = { ...currentPayload, prec };
 
-    dispatch(OrderBookFetch(payload));
-  };
-};
+  thunkAPI.dispatch(orderBookFetch(payload));
+});
 
-export const OrderBookIncreasePrecision = () => {
-  return async (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => IRootState
-  ) => {
-    const currentPayload = getOrderBookSelector(getState()).payload!;
-    const prec = getIncreasedPrecision(currentPayload.prec);
-    const payload = { ...currentPayload, prec };
+/**
+ * Action defined here and not in the slice to avoid circular dependency
+ * `orderBookDataUpdate` is dispatched in `orderBookFetch`
+ */
+export const orderBookDataUpdate = createAction<any>("orderBook/dataUpdate");
 
-    dispatch(OrderBookFetch(payload));
-  };
-};
-
-export const OrderBookDataUpdate = (data: {}) => {
-  return {
-    type: OrderBookActionType.OrderBookDataUpdate,
-    data,
-  } as const;
-};
-
-export const OrderBookDispose = () => {
+export const orderBookDispose = () => {
   closeWebSocket();
 
   return {
-    type: OrderBookActionType.OrderBookDispose,
-  } as const;
+    type: "orderBook/dispose",
+  };
 };
 
-export const OrderBookSimulateConnectionIssue = () => {
+export const orderBookSimulateConnectionIssue = () => {
   const reconnect = true;
   closeWebSocket(reconnect);
 
   return {
-    type: OrderBookActionType.OrderBookSimulateConnectionIssue,
-  } as const;
+    type: "orderBook/simulateConnectionIssue",
+  };
 };
 
-export const OrderBookConnectedChange = (connected: boolean) => {
-  return {
-    type: OrderBookActionType.OrderBookConnectedChange,
-    data: { connected },
-  } as const;
-};
-
-const getDecreasedPrecision = (currentPrecision: string): string => {
-  const results = new Map();
-  results.set("P0", "P0");
-  results.set("P1", "P0");
-  results.set("P2", "P1");
-  results.set("P3", "P2");
-  results.set("P4", "P3");
-
-  return results.get(currentPrecision) || "P0";
-};
-
-const getIncreasedPrecision = (currentPrecision: string): string => {
-  const results = new Map();
-  results.set("P0", "P1");
-  results.set("P1", "P2");
-  results.set("P2", "P3");
-  results.set("P3", "P4");
-  results.set("P4", "P4");
-
-  return results.get(currentPrecision) || "P0";
-};
+export const orderBookConnectedChange = createAction(
+  "orderBook/connectedChange",
+  (connected: boolean) => ({ payload: { connected } })
+);

@@ -28,7 +28,6 @@ export const tradesReducer = (
       const { data } = action;
 
       if (data.event === "subscribed") {
-        console.log("trades websocket subscribed");
         return { ...state, connected: true };
       } else if (Array.isArray(data)) {
         if (data[1] === "te") {

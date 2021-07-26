@@ -7,7 +7,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect';
 import { Ticker } from '../Ticker';
 import { getTickerSelector } from '../../selectors'
-import { TickerDataUpdate } from '../../redux/tickerActions'
+import { tickerDataUpdate } from '../../redux/tickerActions'
 
 /**
  * To avoid "MutationObserver is not a constructor".
@@ -43,7 +43,7 @@ describe('Ticker', () => {
     expect(state.loading).toBe(true);
 
     actionData = { event: "subscribed" };
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
 
     state = getTickerSelector(store.getState());
     expect(state.loading).toBe(false);
@@ -59,12 +59,12 @@ describe('Ticker', () => {
     const [store, { getByText }] = init(initialState);
 
     actionData = { event: "subscribed" };
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
 
     expect(screen.queryByText(pair)).not.toBeInTheDocument();
 
     actionData = [0, [0, 0, 0, 0, 113, 0.0106, 10793, 4733.26937078, 10944, 10637]];
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
 
     expect(getByText(pair)).toBeInTheDocument();
 
@@ -81,10 +81,10 @@ describe('Ticker', () => {
     const [store] = init();
 
     actionData = { event: "subscribed" };
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
 
     actionData = [0, [0, 0, 0, 0, 113, 0.0106, 10793, 4733.26937078, 10944, 10637]];
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
 
     expect(screen.queryByText(pair)).not.toBeInTheDocument();
   })
@@ -98,16 +98,16 @@ describe('Ticker', () => {
     const [store, { getByText }] = init(initialState);
 
     actionData = { event: "subscribed" };
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
 
     actionData = [0, [0, 0, 0, 0, 113, 0.0106, 1, 1, 1, 1]];
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
 
     expect(getByText(pair)).toBeInTheDocument();
     expect(getByText("113 1.06%")).toBeInTheDocument();
 
     actionData = [0, [0, 0, 0, 0, 500, 0.0250, 1, 1, 1, 1]];
-    store.dispatch(TickerDataUpdate(actionData));
+    store.dispatch(tickerDataUpdate(actionData));
     expect(getByText("500 2.50%")).toBeInTheDocument();
   })
 });

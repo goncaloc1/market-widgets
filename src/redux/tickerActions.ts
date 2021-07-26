@@ -1,20 +1,15 @@
-import { Dispatch } from "redux";
 import { createWebSocket } from "../utils/websocket";
-
-export enum TickerActionType {
-  TickerInitStart = "TickerInitStart",
-  TickerInitSuccess = "TickerInitSuccess",
-  TickerInitError = "TickerInitError",
-  TickerDataUpdate = "TickerDataUpdate",
-  TickerDispose = "TickerDispose",
-}
+import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
 
 let closeWebSocket: (reconnect?: boolean) => void;
 
-export const TickerInit = (pair: string) => {
-  return async (dispatch: Dispatch) => {
-    dispatch(TickerInitStart());
-
+/**
+ * The only reason why we need an async thunk here
+ * is to access dispatch function
+ */
+export const tickerInit = createAsyncThunk(
+  "ticker/init",
+  (pair: string, thunkAPI) => {
     try {
       const subscribePayload = {
         event: "subscribe",
@@ -23,44 +18,29 @@ export const TickerInit = (pair: string) => {
       };
 
       const handleDataUpdate = (data: any[]) =>
-        dispatch(TickerDataUpdate(data));
+        thunkAPI.dispatch(tickerDataUpdate(data));
 
       closeWebSocket = createWebSocket(
         "wss://api-pub.bitfinex.com/ws/2",
         subscribePayload,
         handleDataUpdate
       );
-
-      dispatch(TickerInitSuccess());
     } catch (ex) {
-      console.error(ex);
+      thunkAPI.rejectWithValue(ex);
     }
-  };
-};
+  }
+);
 
-const TickerInitStart = () => {
-  return {
-    type: TickerActionType.TickerInitStart,
-  } as const;
-};
+/**
+ * Action defined here and not in the slice to avoid circular dependency
+ * `tickerDataUpdate` is dispatched in `tickerInit`
+ */
+export const tickerDataUpdate = createAction<any>("ticker/dataUpdate");
 
-const TickerInitSuccess = () => {
-  return {
-    type: TickerActionType.TickerInitSuccess,
-  } as const;
-};
-
-export const TickerDataUpdate = (data: {}) => {
-  return {
-    type: TickerActionType.TickerDataUpdate,
-    data,
-  } as const;
-};
-
-export const TickerDispose = () => {
+export const tickerDispose = () => {
   closeWebSocket();
 
   return {
-    type: TickerActionType.TickerDispose,
-  } as const;
+    type: "ticker/dispose",
+  };
 };

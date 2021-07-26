@@ -1,23 +1,19 @@
-import { combineReducers } from 'redux'
-import { ITickerState, getTickerInitialState, tickerReducer } from './redux/tickerReducer'
-import { ITradesState, getTradesInitialState, tradesReducer } from './redux/tradesReducer'
-import { IOrderBookState, getOrderBookInitialState, orderBookReducer } from './redux/orderBookReducer'
+import { combineReducers } from "redux";
+import { getTickerInitialState, tickerSlice } from "./redux/tickerReducer";
+import { getTradesInitialState, tradesReducer } from "./redux/tradesReducer";
+import {
+  getOrderBookInitialState,
+  orderBookSlice,
+} from "./redux/orderBookReducer";
 
-
-export interface IRootState {
-  ticker: ITickerState,
-  trades: ITradesState,
-  orderBook: IOrderBookState
-}
-
-export const getRootInitialState = (): IRootState => ({
+export const getRootInitialState = () => ({
   ticker: getTickerInitialState(),
   trades: getTradesInitialState(),
-  orderBook: getOrderBookInitialState()
+  orderBook: getOrderBookInitialState(),
 });
 
 export const rootReducer = combineReducers({
-  ticker: tickerReducer,
+  ticker: tickerSlice.reducer,
   trades: tradesReducer,
-  orderBook: orderBookReducer
-})
+  orderBook: orderBookSlice.reducer,
+});

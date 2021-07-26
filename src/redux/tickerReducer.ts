@@ -1,44 +1,35 @@
-import { TickerActionType } from './tickerActions'
-import { AnyAction } from 'redux';
-
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { tickerInit, tickerDataUpdate } from "./tickerActions";
 
 export interface ITickerState {
-  loading: boolean,
-  data: number[]
+  loading: boolean;
+  data: number[];
 }
 
 export const getTickerInitialState = (): ITickerState => ({
   loading: true,
-  data: []
+  data: [],
 });
 
+export const tickerSlice = createSlice({
+  name: "ticker",
+  initialState: getTickerInitialState(),
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(tickerInit.pending, () => {
+        return getTickerInitialState();
+      })
+      .addCase(tickerDataUpdate, (state, action: PayloadAction<any>) => {
+        const { payload: data } = action;
 
-export const tickerReducer = (state = getTickerInitialState(), action: AnyAction): ITickerState => {
-  switch (action.type) {
-    case TickerActionType.TickerInitStart: {
-      return getTickerInitialState();
-    }
-    case TickerActionType.TickerInitSuccess: {
-      return { ...state };
-    }
-    case TickerActionType.TickerDataUpdate: {
-      const { data } = action;
+        if (data.event === "subscribed") {
+          return { ...state, loading: false };
+        } else if (Array.isArray(data) && data[1] !== "hb") {
+          return { ...state, data: data[1] };
+        }
 
-      if (data.event === "subscribed") {
-        return { ...state, loading: false };
-      }
-      else if (Array.isArray(data) && data[1] !== "hb") {
-        return { ...state, data: data[1] };
-      }
-
-      return state;
-    }
-
-    case TickerActionType.TickerDispose: {
-      return state;
-    }
-    default:
-      // TODO throw error
-      return state;
-  }
-}
+        return state;
+      });
+  },
+});

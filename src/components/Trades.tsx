@@ -9,12 +9,13 @@ import {
 import { getTradesSelector, getLoadingSelector } from "../selectors";
 import { ThunkDispatch } from "redux-thunk";
 import moment from "moment";
+import { RootState } from "../redux/store";
 
 function Trades(props: { pair: string }) {
   const loading = useSelector(getLoadingSelector);
   const state = useSelector(getTradesSelector);
 
-  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   useEffect(() => {
     dispatch(TradesInit(props.pair));
