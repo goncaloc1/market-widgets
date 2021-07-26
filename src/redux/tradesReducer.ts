@@ -1,21 +1,22 @@
-import { TradesActionType } from './tradesActions'
-import { AnyAction } from 'redux';
-
+import { TradesActionType } from "./tradesActions";
+import { AnyAction } from "redux";
 
 export interface ITradesState {
-  loading: boolean,
-  connected: boolean,
-  data: number[]
+  loading: boolean;
+  connected: boolean;
+  data: number[];
 }
 
 export const getTradesInitialState = (): ITradesState => ({
   loading: true,
   connected: false,
-  data: []
+  data: [],
 });
 
-
-export const tradesReducer = (state = getTradesInitialState(), action: AnyAction): ITradesState => {
+export const tradesReducer = (
+  state = getTradesInitialState(),
+  action: AnyAction
+): ITradesState => {
   switch (action.type) {
     case TradesActionType.TradesInitStart: {
       return getTradesInitialState();
@@ -29,15 +30,13 @@ export const tradesReducer = (state = getTradesInitialState(), action: AnyAction
       if (data.event === "subscribed") {
         console.log("trades websocket subscribed");
         return { ...state, connected: true };
-      }
-      else if (Array.isArray(data)) {
+      } else if (Array.isArray(data)) {
         if (data[1] === "te") {
           const fifo = [...state.data];
           fifo.pop();
           fifo.unshift(data[2]);
           return { ...state, data: fifo };
-        }
-        else if (Array.isArray(data[1])) {
+        } else if (Array.isArray(data[1])) {
           return { ...state, loading: false, data: data[1] };
         }
       }
@@ -46,10 +45,14 @@ export const tradesReducer = (state = getTradesInitialState(), action: AnyAction
     }
 
     case TradesActionType.TradesDispose: {
-      return { ...state, connected: false };
+      // TODO clean state
+      return { ...state };
+    }
+    case TradesActionType.TradesConnectedChange: {
+      return { ...state, connected: action.data.connected };
     }
     default:
       // TODO throw error
       return state;
   }
-}
+};

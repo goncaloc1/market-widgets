@@ -5,17 +5,6 @@ import { OrderBookDataUpdate } from '../orderBookActions'
 describe('orderBookReducer', () => {
   describe('OrderBookDataUpdate action type', () => {
 
-    it('will consider state as connected when subscribed event is received.', () => {
-      const state = getOrderBookInitialState();
-      const actionData = { event: 'subscribed' };
-      const action = OrderBookDataUpdate(actionData);
-
-      const result = orderBookReducer(state, action);
-
-      expect(result !== state).toBe(true);
-      expect(result.connected).toBe(true);
-    });
-
     it('will return a new state when initial snapshot data is passed.', () => {
       const state = getOrderBookInitialState();
       state.payload = { len: 2 };

@@ -1,14 +1,13 @@
-import { OrderBookActionType, WebSocketPayload } from './orderBookActions'
-import { AnyAction } from 'redux';
-import { orderBy } from 'lodash';
-
+import { OrderBookActionType, WebSocketPayload } from "./orderBookActions";
+import { AnyAction } from "redux";
+import { orderBy } from "lodash";
 
 export interface IOrderBookState {
-  loading: boolean,
-  payload?: WebSocketPayload,
-  connected: boolean,
-  bidsData: IPriceLevel[],
-  asksData: IPriceLevel[]
+  loading: boolean;
+  payload?: WebSocketPayload;
+  connected: boolean;
+  bidsData: IPriceLevel[];
+  asksData: IPriceLevel[];
 }
 
 export const getOrderBookInitialState = (): IOrderBookState => ({
@@ -16,25 +15,27 @@ export const getOrderBookInitialState = (): IOrderBookState => ({
   payload: undefined,
   connected: false,
   bidsData: [],
-  asksData: []
+  asksData: [],
 });
 
 export interface IPriceLevel {
-  count: number,
-  price: number,
-  amount: number,
-  total: number,
-  priceFormatted: string,
-  amountFormatted: string,
-  totalFormatted: string
+  count: number;
+  price: number;
+  amount: number;
+  total: number;
+  priceFormatted: string;
+  amountFormatted: string;
+  totalFormatted: string;
 }
 
-
-export const orderBookReducer = (state = getOrderBookInitialState(), action: AnyAction): IOrderBookState => {
+export const orderBookReducer = (
+  state = getOrderBookInitialState(),
+  action: AnyAction
+): IOrderBookState => {
   switch (action.type) {
     case OrderBookActionType.OrderBookFetchStart: {
       const initial = getOrderBookInitialState();
-      return { ...initial, payload: action.data }
+      return { ...initial, payload: action.data };
     }
     case OrderBookActionType.OrderBookFetchSuccess: {
       return { ...state };
@@ -49,34 +50,29 @@ export const orderBookReducer = (state = getOrderBookInitialState(), action: Any
 
       if (data.event === "subscribed") {
         console.log("order book websocket subscribed");
-        return { ...state, connected: true };
-      }
-      else if (Array.isArray(data)) {
-
+        return { ...state };
+      } else if (Array.isArray(data)) {
         if (data[1].length === 3) {
           const o = data[1];
           if (o[1] === 0) {
             if (o[2] === 1) {
               // remove from bids
-              const newData = state.bidsData.filter(pl => pl.price !== o[0]);
+              const newData = state.bidsData.filter((pl) => pl.price !== o[0]);
               const bidsData = updateTotals(newData);
               return { ...state, bidsData };
-            }
-            else {
+            } else {
               // remove from asks
-              const newData = state.asksData.filter(pl => pl.price !== o[0]);
+              const newData = state.asksData.filter((pl) => pl.price !== o[0]);
               const asksData = updateTotals(newData);
               return { ...state, asksData };
             }
-          }
-          else if (o[1] > 0) {
+          } else if (o[1] > 0) {
             // add or update price level
             if (o[2] > 0) {
               // add/update bids
               const bidsData = addOrUpdatePriceLevel(o, state.bidsData, true);
               return { ...state, bidsData };
-            }
-            else if (o[2] < 0) {
+            } else if (o[2] < 0) {
               // add/update asks
               const asksData = addOrUpdatePriceLevel(o, state.asksData, false);
               return { ...state, asksData };
@@ -84,10 +80,12 @@ export const orderBookReducer = (state = getOrderBookInitialState(), action: Any
           }
 
           return { ...state };
-        }
-        else if (data[1].length === state.payload!.len * 2) {
+        } else if (data[1].length === state.payload!.len * 2) {
           // Snapshot
-          const [bidsData, asksData] = initializePriceLevels(state.payload!.len, data[1]);
+          const [bidsData, asksData] = initializePriceLevels(
+            state.payload!.len,
+            data[1]
+          );
           return { ...state, loading: false, bidsData, asksData };
         }
       }
@@ -96,14 +94,17 @@ export const orderBookReducer = (state = getOrderBookInitialState(), action: Any
     }
 
     case OrderBookActionType.OrderBookDispose: {
-      return { ...state, connected: false };
+      // TODO clean state
+      return { ...state };
+    }
+    case OrderBookActionType.OrderBookConnectedChange: {
+      return { ...state, connected: action.data.connected };
     }
     default:
       // TODO throw error
       return state;
   }
-}
-
+};
 
 const formatTotal = (total: number) => total.toFixed(2);
 
@@ -115,12 +116,13 @@ const formatTotal = (total: number) => total.toFixed(2);
 export const doPriceLevelFormat = (pl: any): IPriceLevel => {
   return {
     ...pl,
-    priceFormatted: pl.price.toLocaleString(undefined, { maximumFractionDigits: 3 }),
+    priceFormatted: pl.price.toLocaleString(undefined, {
+      maximumFractionDigits: 3,
+    }),
     amountFormatted: formatTotal(pl.amount),
-    totalFormatted: formatTotal(pl.total)
-  }
-}
-
+    totalFormatted: formatTotal(pl.total),
+  };
+};
 
 export const initializePriceLevels = (nPricePoints: number, data: any[]) => {
   const bidsData: IPriceLevel[] = new Array(nPricePoints);
@@ -134,32 +136,35 @@ export const initializePriceLevels = (nPricePoints: number, data: any[]) => {
         price: o[0],
         count: o[1],
         amount,
-        total: i === 0 ? amount : bidsData[i - 1].total + amount
+        total: i === 0 ? amount : bidsData[i - 1].total + amount,
       });
-    }
-    else {
+    } else {
       const asksIdx = i - nPricePoints;
       asksData[asksIdx] = doPriceLevelFormat({
         price: o[0],
         count: o[1],
         amount,
-        total: asksIdx === 0 ? amount : asksData[asksIdx - 1].total + amount
+        total: asksIdx === 0 ? amount : asksData[asksIdx - 1].total + amount,
       });
     }
   });
 
   return [bidsData, asksData] as const;
-}
+};
 
 /**
  * Updates price level data in array of price levels.
  * (updates amounts and totals).
  */
-const updatePriceLevel = (priceLevel: IPriceLevel, amount: number, data: IPriceLevel[]) => {
+const updatePriceLevel = (
+  priceLevel: IPriceLevel,
+  amount: number,
+  data: IPriceLevel[]
+) => {
   priceLevel.amount = amount;
   priceLevel.amountFormatted = formatTotal(amount);
   return updateTotals(data);
-}
+};
 
 /**
  * Adds a new price level to array of price levels
@@ -170,29 +175,32 @@ const addPriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
     price: o[0],
     count: o[1],
     amount: Math.abs(o[2]),
-    total: 0      // doesn't matter at this point, will be calculated after
+    total: 0, // doesn't matter at this point, will be calculated after
   });
 
   let newData = [...data];
   newData.push(priceLevel);
-  const orderedData = orderBy(newData, 'price', isBids ? 'desc' : 'asc');
+  const orderedData = orderBy(newData, "price", isBids ? "desc" : "asc");
   return updateTotals(orderedData);
-}
+};
 
 /**
  * Adds or updates a price level
  * in an existing list of price levels.
  */
-const addOrUpdatePriceLevel = (o: number[], data: IPriceLevel[], isBids: boolean) => {
-  const found = data.find(pl => pl.price === o[0]);
+const addOrUpdatePriceLevel = (
+  o: number[],
+  data: IPriceLevel[],
+  isBids: boolean
+) => {
+  const found = data.find((pl) => pl.price === o[0]);
   const amount = Math.abs(o[2]);
   if (found) {
     return updatePriceLevel(found, amount, data);
-  }
-  else {
+  } else {
     return addPriceLevel(o, data, isBids);
   }
-}
+};
 
 /**
  * Given an array of price levels,
@@ -207,12 +215,15 @@ const updateTotals = (data: IPriceLevel[]) => {
     if (i > 0) {
       const total = newData[i - 1].total + pl.amount;
       newPl = { ...pl, total, totalFormatted: formatTotal(total) };
-    }
-    else {
-      newPl = { ...pl, total: pl.amount, totalFormatted: formatTotal(pl.amount) };
+    } else {
+      newPl = {
+        ...pl,
+        total: pl.amount,
+        totalFormatted: formatTotal(pl.amount),
+      };
     }
     newData[i] = newPl;
   });
 
   return newData;
-}
+};

@@ -1,11 +1,18 @@
 /**
- * Creates websocket and subscribes using payload.
- * TODO reconnection
+ * TODO make it a class
+ */
+
+/**
+ * Creates websocket and subscribes using payload
+ * Reconnection is enabled by default
  */
 export const createWebSocket = (
-  payload: any,
-  dataUpdateCallback: (data: any) => void
+  url: string,
+  sendPayload: any,
+  onDataUpdate: (data: any) => void,
+  onConnectedChange?: (connected: boolean) => void
 ) => {
+  const reconnectionDelay = 3000;
   /**
    * Always try to WS resubscribe unless component is unmounting.
    */
@@ -25,30 +32,45 @@ export const createWebSocket = (
     wsClose();
   };
 
+  /**
+   * Returns true if connected
+   */
+  const handleConnectedChange = () => {
+    const isConnected = ws.readyState === 1;
+
+    console.log("onConnectedChange:", isConnected);
+
+    if (onConnectedChange) {
+      onConnectedChange(isConnected);
+    }
+  };
+
   const subscribeWS = () => {
-    // TODO receive url as parameter
-    ws = new WebSocket("wss://api-pub.bitfinex.com/ws/2");
+    ws = new WebSocket(url);
 
     ws.onopen = () => {
-      ws.send(JSON.stringify(payload));
+      handleConnectedChange();
+      ws.send(JSON.stringify(sendPayload));
     };
 
     ws.onmessage = (event: any) => {
       const data = JSON.parse(event.data);
-      dataUpdateCallback(data);
+      onDataUpdate(data);
     };
 
     ws.onerror = (err: any) => {
       console.log("ws error:", err.message);
+      handleConnectedChange();
       wsClose();
     };
 
     ws.onclose = (e: any) => {
       console.log("ws close:", e.code, e.reason);
 
-      //TODO timeout / delay
+      handleConnectedChange();
+
       if (reconnection) {
-        subscribeWS();
+        setTimeout(subscribeWS, reconnectionDelay);
       }
     };
   };

@@ -9,27 +9,27 @@ export enum TickerActionType {
   TickerDispose = "TickerDispose",
 }
 
-/**
- * TODO would probably prefer having
- * a websocket ref in React component instead.
- */
-let closeWebSocket: () => void;
+let closeWebSocket: (reconnect?: boolean) => void;
 
 export const TickerInit = (pair: string) => {
   return async (dispatch: Dispatch) => {
     dispatch(TickerInitStart());
 
     try {
-      const payload = {
+      const subscribePayload = {
         event: "subscribe",
         channel: "ticker",
         symbol: pair,
       };
 
-      const dispatchCallback = (data: any[]) =>
+      const handleDataUpdate = (data: any[]) =>
         dispatch(TickerDataUpdate(data));
 
-      closeWebSocket = createWebSocket(payload, dispatchCallback);
+      closeWebSocket = createWebSocket(
+        "wss://api-pub.bitfinex.com/ws/2",
+        subscribePayload,
+        handleDataUpdate
+      );
 
       dispatch(TickerInitSuccess());
     } catch (ex) {

@@ -67,7 +67,7 @@ function Trades(props: { pair: string }) {
           </div>
 
           <div className="row float-right mr-n2">
-            {state.connected && (
+            {state.connected ? (
               <button
                 type="button"
                 className="btn btn-link btn-sm"
@@ -76,6 +76,8 @@ function Trades(props: { pair: string }) {
               >
                 Simulate Connection Issue
               </button>
+            ) : (
+              <small>Disconnected</small>
             )}
           </div>
         </div>

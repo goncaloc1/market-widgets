@@ -12,6 +12,7 @@ export enum OrderBookActionType {
   OrderBookDecreasePrecision = "OrderBookDecreasePrecision",
   OrderBookDispose = "OrderBookDispose",
   OrderBookSimulateConnectionIssue = "OrderBookSimulateConnectionIssue",
+  OrderBookConnectedChange = "OrderBookConnectedChange",
 }
 
 let closeWebSocket: (reconnect?: boolean) => void;
@@ -35,19 +36,27 @@ export const OrderBookInit = (pair: string) => {
   };
 };
 
-const OrderBookFetch = (payload: WebSocketPayload) => {
+const OrderBookFetch = (subscribePayload: WebSocketPayload) => {
   return async (dispatch: Dispatch) => {
     if (closeWebSocket) {
       closeWebSocket();
     }
 
-    dispatch(OrderBookFetchStart(payload));
+    dispatch(OrderBookFetchStart(subscribePayload));
 
     try {
-      const dispatchCallback = (data: any[]) =>
+      const handleDataUpdate = (data: any[]) =>
         dispatch(OrderBookDataUpdate(data));
 
-      closeWebSocket = createWebSocket(payload, dispatchCallback);
+      const handleConnectedChange = (connected: boolean) =>
+        dispatch(OrderBookConnectedChange(connected));
+
+      closeWebSocket = createWebSocket(
+        "wss://api-pub.bitfinex.com/ws/2",
+        subscribePayload,
+        handleDataUpdate,
+        handleConnectedChange
+      );
 
       dispatch(OrderBookFetchSuccess());
     } catch (ex) {
@@ -116,6 +125,13 @@ export const OrderBookSimulateConnectionIssue = () => {
 
   return {
     type: OrderBookActionType.OrderBookSimulateConnectionIssue,
+  } as const;
+};
+
+export const OrderBookConnectedChange = (connected: boolean) => {
+  return {
+    type: OrderBookActionType.OrderBookConnectedChange,
+    data: { connected },
   } as const;
 };
 
