@@ -13,7 +13,7 @@ export const getWebSocketDefaultPayload = (pair: string) => ({
   event: "subscribe",
   channel: "book",
   symbol: pair,
-  prec: "P0",
+  prec: "P2",
   //"freq": "F1",
   /**
    * Number of price points ("1", "25", "100", "250") [default="25"]

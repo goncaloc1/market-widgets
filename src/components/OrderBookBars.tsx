@@ -3,10 +3,17 @@ import { useSelector } from "react-redux";
 import { IPriceLevel } from "../redux/orderBookHelpers";
 import { getOrderBookSelector } from "../selectors";
 
-function OrderBookBars(props: { isBids: boolean; count: number }) {
+const getWidth = (total: number, maxTotal: number) => (total * 100) / maxTotal;
+
+function OrderBookBars(props: { isBids: boolean; barsCount: number }) {
   const state = useSelector(getOrderBookSelector);
 
   const getData = () => (props.isBids ? state.bidsData : state.asksData);
+
+  /**
+   * data is ordered so we're sure to obtain max total by accessing the last index
+   */
+  const maxTotal = getData()[props.barsCount - 1].total;
 
   return (
     <svg
@@ -14,13 +21,12 @@ function OrderBookBars(props: { isBids: boolean; count: number }) {
     >
       {getData().map((priceLevel: IPriceLevel, idx: number) => {
         return (
-          idx < props.count && (
+          idx < props.barsCount && (
             <rect
               key={priceLevel.price}
               x="1"
               y={idx * 20}
-              // TODO 0.55 is hardcoded
-              width={priceLevel.total * 0.55 + "%"}
+              width={`${getWidth(priceLevel.total, maxTotal)}%`}
               height="20"
               fillOpacity="0.2"
             ></rect>

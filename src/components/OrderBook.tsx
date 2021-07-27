@@ -67,7 +67,7 @@ function OrderBook(props: { pair: string }) {
                   <div className="col-sm text-right">PRICE</div>
                 </div>
 
-                <OrderBookBars isBids={true} count={barsCount} />
+                <OrderBookBars isBids={true} barsCount={barsCount} />
 
                 {state.bidsData.map((priceLevel: IPriceLevel, idx) => {
                   return (
@@ -99,7 +99,7 @@ function OrderBook(props: { pair: string }) {
                   <div className="col-sm text-right">COUNT</div>
                 </div>
 
-                <OrderBookBars isBids={false} count={barsCount} />
+                <OrderBookBars isBids={false} barsCount={barsCount} />
 
                 {state.asksData.map((priceLevel: IPriceLevel, idx) => {
                   return (
