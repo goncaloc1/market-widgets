@@ -9,12 +9,15 @@ import { RootState } from "./store";
 
 let closeWebSocket: (reconnect?: boolean) => void;
 
-const getWebSocketDefaultPayload = (pair: string) => ({
+export const getWebSocketDefaultPayload = (pair: string) => ({
   event: "subscribe",
   channel: "book",
   symbol: pair,
   prec: "P0",
   //"freq": "F1",
+  /**
+   * Number of price points ("1", "25", "100", "250") [default="25"]
+   */
   len: 25,
 });
 

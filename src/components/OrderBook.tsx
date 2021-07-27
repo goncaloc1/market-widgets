@@ -7,12 +7,27 @@ import {
   orderBookInit,
   orderBookDispose,
   orderBookSimulateConnectionIssue,
+  getWebSocketDefaultPayload,
 } from "../redux/orderBookActions";
 
 import { getOrderBookSelector, getLoadingSelector } from "../selectors";
 import { ThunkDispatch } from "redux-thunk";
 import { IPriceLevel } from "../redux/orderBookHelpers";
 import { RootState } from "../redux/store";
+
+const getBarsCount = () => {
+  const { len: numberOfPricePoints } = getWebSocketDefaultPayload("");
+  return numberOfPricePoints - 5;
+};
+
+/**
+ * Typically we get 25 results for each bids and asks price levels.
+ * But when we have to delete a price level (due to count === 0)
+ * we'll be introducing visual flickering because then we'd have
+ * 24 results (sometime less) instead of the 25.
+ * Solution here is to add a buffer of 5 to avoid that.
+ */
+const barsCount = getBarsCount();
 
 function OrderBook(props: { pair: string }) {
   const loading = useSelector(getLoadingSelector);
@@ -52,20 +67,26 @@ function OrderBook(props: { pair: string }) {
                   <div className="col-sm text-right">PRICE</div>
                 </div>
 
-                <OrderBookBars isBids={true} />
+                <OrderBookBars isBids={true} count={barsCount} />
 
-                {state.bidsData.map((priceLevel: IPriceLevel) => (
-                  <div className="row border-bottom" key={priceLevel.price}>
-                    <div className="col-sm">{priceLevel.count}</div>
-                    <div className="col-sm">{priceLevel.amountFormatted}</div>
-                    <div className="col-sm text-right">
-                      {priceLevel.totalFormatted}
-                    </div>
-                    <div className="col-sm text-right">
-                      {priceLevel.priceFormatted}
-                    </div>
-                  </div>
-                ))}
+                {state.bidsData.map((priceLevel: IPriceLevel, idx) => {
+                  return (
+                    idx < barsCount && (
+                      <div className="row border-bottom" key={priceLevel.price}>
+                        <div className="col-sm">{priceLevel.count}</div>
+                        <div className="col-sm">
+                          {priceLevel.amountFormatted}
+                        </div>
+                        <div className="col-sm text-right">
+                          {priceLevel.totalFormatted}
+                        </div>
+                        <div className="col-sm text-right">
+                          {priceLevel.priceFormatted}
+                        </div>
+                      </div>
+                    )
+                  );
+                })}
               </div>
             </div>
 
@@ -78,18 +99,28 @@ function OrderBook(props: { pair: string }) {
                   <div className="col-sm text-right">COUNT</div>
                 </div>
 
-                <OrderBookBars isBids={false} />
+                <OrderBookBars isBids={false} count={barsCount} />
 
-                {state.asksData.map((priceLevel: IPriceLevel) => (
-                  <div className="row border-bottom" key={priceLevel.price}>
-                    <div className="col-sm">{priceLevel.priceFormatted}</div>
-                    <div className="col-sm">{priceLevel.totalFormatted}</div>
-                    <div className="col-sm text-right">
-                      {priceLevel.amountFormatted}
-                    </div>
-                    <div className="col-sm text-right">{priceLevel.count}</div>
-                  </div>
-                ))}
+                {state.asksData.map((priceLevel: IPriceLevel, idx) => {
+                  return (
+                    idx < barsCount && (
+                      <div className="row border-bottom" key={priceLevel.price}>
+                        <div className="col-sm">
+                          {priceLevel.priceFormatted}
+                        </div>
+                        <div className="col-sm">
+                          {priceLevel.totalFormatted}
+                        </div>
+                        <div className="col-sm text-right">
+                          {priceLevel.amountFormatted}
+                        </div>
+                        <div className="col-sm text-right">
+                          {priceLevel.count}
+                        </div>
+                      </div>
+                    )
+                  );
+                })}
               </div>
             </div>
           </div>
