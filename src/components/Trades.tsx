@@ -8,9 +8,10 @@ import {
 } from "../redux/tradesActions";
 import { getTradesSelector, getLoadingSelector } from "../selectors";
 import { ThunkDispatch } from "redux-thunk";
-import moment from "moment";
 import { RootState } from "../redux/store";
 import { ConnectionIssueButton } from "./ConnectionIssueButton";
+import { TradeItem } from "./TradeItem";
+import { Trade } from "../redux/tradesReducer";
 
 function Trades(props: { pair: string }) {
   const loading = useSelector(getLoadingSelector);
@@ -43,26 +44,8 @@ function Trades(props: { pair: string }) {
               <div className="col-sm text-right">AMOUNT</div>
             </div>
 
-            {state.data.map((trade: any) => (
-              <div className="row border-bottom" key={trade[0]}>
-                {trade[2] >= 0 && (
-                  <div className="col-sm-1 text-success">&#8593;</div>
-                )}
-                {trade[2] < 0 && (
-                  <div className="col-sm-1 text-danger">&#8595;</div>
-                )}
-                <div className="col-sm">
-                  {moment(trade[1]).format("hh:mm:ss")}
-                </div>
-                <div className="col-sm text-right">
-                  {trade[3].toLocaleString(undefined, {
-                    maximumFractionDigits: 0,
-                  })}
-                </div>
-                <div className="col-sm text-right">
-                  {Math.abs(trade[2]).toFixed(4)}
-                </div>
-              </div>
+            {state.data.map((trade: Trade) => (
+              <TradeItem trade={trade} />
             ))}
           </div>
 

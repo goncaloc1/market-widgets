@@ -1,10 +1,17 @@
 import { TradesActionType } from "./tradesActions";
 import { AnyAction } from "redux";
 
+export type Trade = [
+  id: number,
+  timestamp: number,
+  price: number,
+  amount: number
+];
+
 export interface ITradesState {
   loading: boolean;
   connected: boolean;
-  data: number[];
+  data: Trade[];
 }
 
 export const getTradesInitialState = (): ITradesState => ({
