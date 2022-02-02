@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { AnyAction } from "redux";
 import { useSelector, useDispatch } from "react-redux";
 import { OrderBookControls } from "./OrderBookControls";
@@ -14,6 +14,7 @@ import { getOrderBookSelector, getLoadingSelector } from "../selectors";
 import { ThunkDispatch } from "redux-thunk";
 import { IPriceLevel } from "../redux/orderBookHelpers";
 import { RootState } from "../redux/store";
+import { ConnectionIssueButton } from "./ConnectionIssueButton";
 
 const getBarsCount = () => {
   const { len: numberOfPricePoints } = getWebSocketDefaultPayload("");
@@ -43,11 +44,9 @@ function OrderBook(props: { pair: string }) {
     };
   }, [dispatch, props.pair]);
 
-  const simulateConnectionIssue = () => {
-    if (state.connected) {
-      dispatch(orderBookSimulateConnectionIssue());
-    }
-  };
+  const triggerConnectionIssue = useCallback(() => {
+    dispatch(orderBookSimulateConnectionIssue());
+  }, [dispatch]);
 
   return (
     <>
@@ -125,20 +124,10 @@ function OrderBook(props: { pair: string }) {
             </div>
           </div>
 
-          <div className="row float-right mr-n2">
-            {state.connected ? (
-              <button
-                type="button"
-                className="btn btn-link btn-sm"
-                id="trades-connect-disconnect"
-                onClick={simulateConnectionIssue}
-              >
-                Simulate Connection Issue
-              </button>
-            ) : (
-              <small>Disconnected</small>
-            )}
-          </div>
+          <ConnectionIssueButton
+            connected={state.connected}
+            triggerConnectionIssue={triggerConnectionIssue}
+          />
         </div>
       )}
     </>

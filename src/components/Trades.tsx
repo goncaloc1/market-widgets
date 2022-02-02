@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { AnyAction } from "redux";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -10,6 +10,7 @@ import { getTradesSelector, getLoadingSelector } from "../selectors";
 import { ThunkDispatch } from "redux-thunk";
 import moment from "moment";
 import { RootState } from "../redux/store";
+import { ConnectionIssueButton } from "./ConnectionIssueButton";
 
 function Trades(props: { pair: string }) {
   const loading = useSelector(getLoadingSelector);
@@ -25,11 +26,9 @@ function Trades(props: { pair: string }) {
     };
   }, [dispatch, props.pair]);
 
-  const simulateConnectionIssue = () => {
-    if (state.connected) {
-      dispatch(TradesSimulateConnectionIssue());
-    }
-  };
+  const triggerConnectionIssue = useCallback(() => {
+    dispatch(TradesSimulateConnectionIssue());
+  }, [dispatch]);
 
   return (
     <>
@@ -67,20 +66,10 @@ function Trades(props: { pair: string }) {
             ))}
           </div>
 
-          <div className="row float-right mr-n2">
-            {state.connected ? (
-              <button
-                type="button"
-                className="btn btn-link btn-sm"
-                id="trades-connect-disconnect"
-                onClick={simulateConnectionIssue}
-              >
-                Simulate Connection Issue
-              </button>
-            ) : (
-              <small>Disconnected</small>
-            )}
-          </div>
+          <ConnectionIssueButton
+            connected={state.connected}
+            triggerConnectionIssue={triggerConnectionIssue}
+          />
         </div>
       )}
     </>
