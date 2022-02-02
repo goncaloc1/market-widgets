@@ -6,19 +6,19 @@ import { getTickerSelector, getLoadingSelector } from "../selectors";
 import { ThunkDispatch } from "redux-thunk";
 import { RootState } from "../redux/store";
 
-function Ticker(props: { pair: string }) {
+const Ticker: React.FC<{ pair: string }> = ({ pair }) => {
   const loading = useSelector(getLoadingSelector);
   const state = useSelector(getTickerSelector);
 
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
   useEffect(() => {
-    dispatch(tickerInit(props.pair));
+    dispatch(tickerInit(pair));
 
     return () => {
       dispatch(tickerDispose());
     };
-  }, [dispatch, props.pair]);
+  }, [dispatch, pair]);
 
   return (
     <>
@@ -34,7 +34,7 @@ function Ticker(props: { pair: string }) {
             />
           </div>
           <div className="col-5">
-            <div className="">{props.pair}</div>
+            <div className="">{pair}</div>
             <div className="small">
               VOL{" "}
               {(state.data[7] * state.data[6]).toLocaleString(undefined, {
@@ -61,6 +61,6 @@ function Ticker(props: { pair: string }) {
       )}
     </>
   );
-}
+};
 
 export { Ticker };

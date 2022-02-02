@@ -13,7 +13,7 @@ import { ConnectionIssueButton } from "./ConnectionIssueButton";
 import { TradeItem } from "./TradeItem";
 import { Trade } from "../redux/tradesReducer";
 
-function Trades(props: { pair: string }) {
+const Trades = (props: { pair: string }) => {
   const loading = useSelector(getLoadingSelector);
   const state = useSelector(getTradesSelector);
 
@@ -57,6 +57,6 @@ function Trades(props: { pair: string }) {
       )}
     </>
   );
-}
+};
 
 export { Trades };

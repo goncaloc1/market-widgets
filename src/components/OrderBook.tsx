@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { AnyAction } from "redux";
 import { useSelector, useDispatch } from "react-redux";
 import { OrderBookControls } from "./OrderBookControls";
@@ -15,6 +15,7 @@ import { ThunkDispatch } from "redux-thunk";
 import { IPriceLevel } from "../redux/orderBookHelpers";
 import { RootState } from "../redux/store";
 import { ConnectionIssueButton } from "./ConnectionIssueButton";
+import { OrderBookItem } from "./OrderBookItem";
 
 const getBarsCount = () => {
   const { len: numberOfPricePoints } = getWebSocketDefaultPayload("");
@@ -24,8 +25,8 @@ const getBarsCount = () => {
 /**
  * Typically we get 25 results for each bids and asks price levels.
  * But when we have to delete a price level (due to count === 0)
- * we'll be introducing visual flickering because then we'd have
- * 24 results (sometime less) instead of the 25.
+ * we'd introduce visual flickering because we'd have
+ * 24 results - sometimes less - instead of the 25.
  * Solution here is to add a buffer of 5 to avoid that.
  */
 const barsCount = getBarsCount();
@@ -68,24 +69,12 @@ function OrderBook(props: { pair: string }) {
 
                 <OrderBookBars isBids={true} barsCount={barsCount} />
 
-                {state.bidsData.map((priceLevel: IPriceLevel, idx) => {
-                  return (
+                {state.bidsData.map(
+                  (priceLevel: IPriceLevel, idx) =>
                     idx < barsCount && (
-                      <div className="row border-bottom" key={priceLevel.price}>
-                        <div className="col-sm">{priceLevel.count}</div>
-                        <div className="col-sm">
-                          {priceLevel.amountFormatted}
-                        </div>
-                        <div className="col-sm text-right">
-                          {priceLevel.totalFormatted}
-                        </div>
-                        <div className="col-sm text-right">
-                          {priceLevel.priceFormatted}
-                        </div>
-                      </div>
+                      <OrderBookItem isBids={true} priceLevel={priceLevel} />
                     )
-                  );
-                })}
+                )}
               </div>
             </div>
 
@@ -100,26 +89,12 @@ function OrderBook(props: { pair: string }) {
 
                 <OrderBookBars isBids={false} barsCount={barsCount} />
 
-                {state.asksData.map((priceLevel: IPriceLevel, idx) => {
-                  return (
+                {state.asksData.map(
+                  (priceLevel: IPriceLevel, idx) =>
                     idx < barsCount && (
-                      <div className="row border-bottom" key={priceLevel.price}>
-                        <div className="col-sm">
-                          {priceLevel.priceFormatted}
-                        </div>
-                        <div className="col-sm">
-                          {priceLevel.totalFormatted}
-                        </div>
-                        <div className="col-sm text-right">
-                          {priceLevel.amountFormatted}
-                        </div>
-                        <div className="col-sm text-right">
-                          {priceLevel.count}
-                        </div>
-                      </div>
+                      <OrderBookItem isBids={false} priceLevel={priceLevel} />
                     )
-                  );
-                })}
+                )}
               </div>
             </div>
           </div>
